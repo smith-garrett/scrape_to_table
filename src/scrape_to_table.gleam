@@ -4,17 +4,18 @@ import gleam/httpc
 import gleam/int
 import gleam/io
 import gleam/list
-import gleam/result
 
 pub fn main() -> Nil {
-  let urls = generate_urls(2018, 2020)
+  // Note! The BVDG just generates a page for any queried season, so we have to
+  // manually constrain ourselves to the valid years for now
+  let urls = generate_urls(2018, 2026)
   let getter = new_html_getter()
 
   urls
   |> list.map(get_html_body(_, getter))
   |> list.each(fn(x) {
     case x {
-      Ok(str) -> io.println(str)
+      Ok(_) -> io.println("Found!")
       _ -> io.println("No body received")
     }
   })
