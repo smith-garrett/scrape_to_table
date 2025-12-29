@@ -4,12 +4,16 @@ import gleam/httpc
 import gleam/int
 import gleam/io
 import gleam/list
-import gleam/pair
 import gleam/result
 
 pub fn main() -> Nil {
+  let urls = generate_urls(2018, 2026)
+  urls |> list.each(get_status)
+}
+
+pub fn generate_urls(start: Int, end: Int) -> List(String) {
   let seasons =
-    list.range(2018, 2026)
+    list.range(start, end)
     |> list.window_by_2
     |> list.map(fn(year_pair) {
       let #(year1, year2) = year_pair
@@ -18,11 +22,11 @@ pub fn main() -> Nil {
 
   let base_url =
     "https://german-weightlifting.de/bundesliga/contestants/best-list/"
-  let urls = seasons |> list.map(fn(x) { base_url <> x })
-  urls |> list.each(get_status)
+
+  seasons |> list.map(fn(x) { base_url <> x })
 }
 
-fn get_status(url: String) -> Nil {
+pub fn get_status(url: String) -> Nil {
   let assert Ok(req) = request.to(url)
   let resp = httpc.send(req)
   case resp {
