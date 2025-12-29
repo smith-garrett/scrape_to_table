@@ -1,5 +1,4 @@
 import gleam/http/request
-import gleam/http/response
 import gleam/httpc
 import gleam/int
 import gleam/io
@@ -7,8 +6,16 @@ import gleam/list
 import gleam/result
 
 pub fn main() -> Nil {
-  let urls = generate_urls(2018, 2026)
-  urls |> list.each(get_status)
+  let urls = generate_urls(2018, 2019)
+  // urls |> list.each(get_status)
+  urls
+  |> list.map(get_html_body)
+  |> list.each(fn(x) {
+    case x {
+      Ok(str) -> io.println(str)
+      _ -> io.println("No body received")
+    }
+  })
 }
 
 pub fn generate_urls(start: Int, end: Int) -> List(String) {
@@ -32,5 +39,14 @@ pub fn get_status(url: String) -> Nil {
   case resp {
     Ok(x) -> io.println(url <> ": " <> int.to_string(x.status))
     _ -> io.println("Something when wrong")
+  }
+}
+
+fn get_html_body(url: String) -> Result(String, Nil) {
+  let assert Ok(req) = request.to(url)
+  let resp = httpc.send(req)
+  case resp {
+    Ok(r) -> Ok(r.body)
+    _ -> Error(Nil)
   }
 }
