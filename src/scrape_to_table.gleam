@@ -9,7 +9,7 @@ pub fn main() -> Nil {
   // Note! The BVDG just generates a page for any queried season, so we have to
   // manually constrain ourselves to the valid years for now
   let urls = generate_urls(2018, 2026)
-  let getter = new_html_getter()
+  let getter = new_response_getter()
 
   urls
   |> list.map(get_html_body(_, getter))
@@ -42,7 +42,7 @@ pub type HttpResponseGetter {
   )
 }
 
-pub fn new_html_getter() -> HttpResponseGetter {
+pub fn new_response_getter() -> HttpResponseGetter {
   let get_fn = fn(url: String) {
     let assert Ok(req) = request.to(url)
     httpc.send(req)
