@@ -1,4 +1,5 @@
 import gleam/http/request
+import gleam/http/response
 import gleam/httpc
 import gleam/int
 import gleam/io
@@ -6,10 +7,11 @@ import gleam/list
 import gleam/result
 
 pub fn main() -> Nil {
-  let urls = generate_urls(2018, 2019)
-  // urls |> list.each(get_status)
+  let urls = generate_urls(2018, 2020)
+  let getter = new_html_getter()
+
   urls
-  |> list.map(get_html_body)
+  |> list.map(get_html_body(_, getter))
   |> list.each(fn(x) {
     case x {
       Ok(str) -> io.println(str)
@@ -33,18 +35,25 @@ pub fn generate_urls(start: Int, end: Int) -> List(String) {
   seasons |> list.map(fn(x) { base_url <> x })
 }
 
-pub fn get_status(url: String) -> Nil {
-  let assert Ok(req) = request.to(url)
-  let resp = httpc.send(req)
-  case resp {
-    Ok(x) -> io.println(url <> ": " <> int.to_string(x.status))
-    _ -> io.println("Something when wrong")
-  }
+pub type HttpResponseGetter {
+  HtmlGetter(
+    get: fn(String) -> Result(response.Response(String), httpc.HttpError),
+  )
 }
 
-fn get_html_body(url: String) -> Result(String, Nil) {
-  let assert Ok(req) = request.to(url)
-  let resp = httpc.send(req)
+pub fn new_html_getter() -> HttpResponseGetter {
+  let get_fn = fn(url: String) {
+    let assert Ok(req) = request.to(url)
+    httpc.send(req)
+  }
+  HtmlGetter(get_fn)
+}
+
+pub fn get_html_body(
+  url: String,
+  response_getter: HttpResponseGetter,
+) -> Result(String, Nil) {
+  let resp = response_getter.get(url)
   case resp {
     Ok(r) -> Ok(r.body)
     _ -> Error(Nil)
