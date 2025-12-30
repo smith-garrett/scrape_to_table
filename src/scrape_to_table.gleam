@@ -3,7 +3,6 @@ import gleam/http/request
 import gleam/http/response
 import gleam/httpc
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
@@ -13,7 +12,7 @@ import sqlight
 pub fn main() -> Nil {
   // Note! The BVDG just generates a page for any queried season, so we have to
   // manually constrain ourselves to the valid years for now
-  let urls = generate_urls(2018, 2019)
+  let urls = generate_urls(2018, 2026)
   let getter = new_response_getter()
 
   // Pair each URL with its year
@@ -40,27 +39,13 @@ pub fn main() -> Nil {
       }
     })
 
-  // Print the parsed entries
+  use sql_connection <- sqlight.with_connection("lifters.sqlite3")
   let query =
     lifter_entries
     |> list.map(text_from_lifter_entry)
     |> generate_sql
-
-  io.println(query)
-  // |> list.each(fn(entry) {
-  //   io.println(
-  //     "Year: "
-  //     <> int.to_string(entry.year)
-  //     <> ", Rank: "
-  //     <> int.to_string(entry.rank)
-  //     <> ", Name: "
-  //     <> entry.name
-  //     <> ", Club: "
-  //     <> entry.club
-  //     <> ", Points: "
-  //     <> float.to_string(entry.maximum_points),
-  //   )
-  // })
+  let assert Ok(Nil) = sqlight.exec(query, sql_connection)
+  Nil
 }
 
 pub fn generate_urls(start: Int, end: Int) -> List(String) {
@@ -214,7 +199,8 @@ pub fn parse_table_entry(
 }
 
 pub fn text_from_lifter_entry(lifter_entry: LifterEntry) -> String {
-  string.join(
+  "("
+  <> string.join(
     [
       int.to_string(lifter_entry.year),
       int.to_string(lifter_entry.rank),
@@ -224,6 +210,7 @@ pub fn text_from_lifter_entry(lifter_entry: LifterEntry) -> String {
     ],
     ", ",
   )
+  <> ")"
 }
 
 pub fn generate_sql(entries: List(String)) -> String {
