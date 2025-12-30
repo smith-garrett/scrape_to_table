@@ -23,14 +23,15 @@ pub fn main() -> Nil {
       #(url, year)
     })
 
-  let entries =
+  let lifter_entries =
     url_year_pairs
     |> list.flat_map(fn(pair) {
       let #(url, year) = pair
       case get_html_body(url, getter) {
         Ok(body) -> {
           case get_all_table_entries(body) {
-            Ok(trs) -> trs |> list.filter_map(parse_table_entry(_, year))
+            Ok(table_rows) ->
+              table_rows |> list.filter_map(parse_table_entry(_, year))
             Error(_) -> []
           }
         }
@@ -39,7 +40,7 @@ pub fn main() -> Nil {
     })
 
   // Print the parsed entries
-  entries
+  lifter_entries
   |> list.each(fn(entry) {
     io.println(
       "Year: "
@@ -106,7 +107,7 @@ pub fn get_all_table_entries(html_body) -> Result(List(soup.Element), Nil) {
   soup.find_all(html_body, query)
 }
 
-pub type Entry {
+pub type LifterEntry {
   Entry(year: Int, rank: Int, name: String, club: String, maximum_points: Float)
 }
 
@@ -142,10 +143,12 @@ fn get_text_content(element: soup.Element) -> String {
 
 // TODO: Write 3 tests: happy, sad (no tds), sad (only Text)
 // Get all td elements from a tr
-fn get_td_elements(tr_element: soup.Element) -> Result(List(soup.Element), Nil) {
-  case tr_element {
+fn get_table_cell_elements(
+  table_row_element: soup.Element,
+) -> Result(List(soup.Element), Nil) {
+  case table_row_element {
     soup.Element(_tag, _attrs, children) -> {
-      let tds =
+      let table_cells =
         children
         |> list.filter(fn(child) {
           case child {
@@ -160,9 +163,9 @@ fn get_td_elements(tr_element: soup.Element) -> Result(List(soup.Element), Nil) 
           }
         })
 
-      case list.is_empty(tds) {
+      case list.is_empty(table_cells) {
         True -> Error(Nil)
-        False -> Ok(tds)
+        False -> Ok(table_cells)
       }
     }
     soup.Text(_) -> Error(Nil)
@@ -171,18 +174,18 @@ fn get_td_elements(tr_element: soup.Element) -> Result(List(soup.Element), Nil) 
 
 // TODO: Write 4 tests: happy, sad (too many entries), sad (too few entries), sad (no tds)
 pub fn parse_table_entry(
-  tr_element: soup.Element,
+  table_row_element: soup.Element,
   year: Int,
-) -> Result(Entry, Nil) {
-  case get_td_elements(tr_element) {
-    Ok(tds) -> {
+) -> Result(LifterEntry, Nil) {
+  case get_table_cell_elements(table_row_element) {
+    Ok(table_cells) -> {
       // The table has columns: Rank, Name, Club, Maximum Points
-      case tds {
-        [rank_td, name_td, club_td, points_td, ..] -> {
-          let rank_text = get_text_content(rank_td)
-          let name_text = get_text_content(name_td)
-          let club_text = get_text_content(club_td)
-          let points_text = get_text_content(points_td)
+      case table_cells {
+        [rank_cell, name_cell, club_cell, points_cell, ..] -> {
+          let rank_text = get_text_content(rank_cell)
+          let name_text = get_text_content(name_cell)
+          let club_text = get_text_content(club_cell)
+          let points_text = get_text_content(points_cell)
 
           // Parse rank as int
           let rank = int.parse(rank_text) |> result.unwrap(0)
