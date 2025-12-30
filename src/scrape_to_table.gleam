@@ -8,11 +8,12 @@ import gleam/list
 import gleam/result
 import gleam/string
 import presentable_soup as soup
+import sqlight
 
 pub fn main() -> Nil {
   // Note! The BVDG just generates a page for any queried season, so we have to
   // manually constrain ourselves to the valid years for now
-  let urls = generate_urls(2018, 2026)
+  let urls = generate_urls(2018, 2019)
   let getter = new_response_getter()
 
   // Pair each URL with its year
@@ -40,23 +41,26 @@ pub fn main() -> Nil {
     })
 
   // Print the parsed entries
-  lifter_entries
-  |> list.each(fn(entry) {
-    io.println(
-      "Year: "
-      <> int.to_string(entry.year)
-      <> ", Rank: "
-      <> int.to_string(entry.rank)
-      <> ", Name: "
-      <> entry.name
-      <> ", Club: "
-      <> entry.club
-      <> ", Points: "
-      <> float.to_string(entry.maximum_points),
-    )
-  })
+  let query =
+    lifter_entries
+    |> list.map(text_from_lifter_entry)
+    |> generate_sql
 
-  Nil
+  io.println(query)
+  // |> list.each(fn(entry) {
+  //   io.println(
+  //     "Year: "
+  //     <> int.to_string(entry.year)
+  //     <> ", Rank: "
+  //     <> int.to_string(entry.rank)
+  //     <> ", Name: "
+  //     <> entry.name
+  //     <> ", Club: "
+  //     <> entry.club
+  //     <> ", Points: "
+  //     <> float.to_string(entry.maximum_points),
+  //   )
+  // })
 }
 
 pub fn generate_urls(start: Int, end: Int) -> List(String) {
@@ -207,4 +211,25 @@ pub fn parse_table_entry(
     }
     Error(_) -> Error(Nil)
   }
+}
+
+pub fn text_from_lifter_entry(lifter_entry: LifterEntry) -> String {
+  string.join(
+    [
+      int.to_string(lifter_entry.year),
+      int.to_string(lifter_entry.rank),
+      "'" <> lifter_entry.name <> "'",
+      "'" <> lifter_entry.club <> "'",
+      float.to_string(lifter_entry.maximum_points),
+    ],
+    ", ",
+  )
+}
+
+pub fn generate_sql(entries: List(String)) -> String {
+  let all_entries = entries |> string.join(",\n") |> fn(x) { x <> ";" }
+  "create table lifters (year int, rank int, name string, club string, maximum_points real);
+insert into lifters (year, rank, name, club, maximum_points) values"
+  <> "\n"
+  <> all_entries
 }
