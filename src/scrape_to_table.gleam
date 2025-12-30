@@ -12,10 +12,16 @@ import presentable_soup as soup
 pub fn main() -> Nil {
   // Note! The BVDG just generates a page for any queried season, so we have to
   // manually constrain ourselves to the valid years for now
-  let urls = generate_urls(2025, 2026)
+  let start_year = 2018
+  let end_year = 2025 + 1
+  let urls = generate_urls(start_year, end_year + 1)
   let getter = new_response_getter()
 
-  let html_bodies = urls |> list.map(get_html_body(_, getter)) |> result.values
+  let html_bodies =
+    urls
+    |> list.map(get_html_body(_, getter))
+    |> result.values
+    |> list.strict_zip(list.range(start_year, end_year))
 
   let entries =
     html_bodies
@@ -93,9 +99,10 @@ pub fn get_all_table_entries(html_body) -> Result(List(soup.Element), Nil) {
 }
 
 pub type Entry {
-  Entry(rank: Int, name: String, club: String, maximum_points: Float)
+  Entry(year: Int, rank: Int, name: String, club: String, maximum_points: Float)
 }
 
+// TODO: Write 2 tests: one with an embedded child, one without
 // Extract text content from an element and its children
 fn get_text_content(element: soup.Element) -> String {
   case element {
@@ -114,6 +121,7 @@ fn get_text_content(element: soup.Element) -> String {
   }
 }
 
+// TODO: Write 3 tests: happy, sad (no tds), sad (only Text)
 // Get all td elements from a tr
 fn get_td_elements(tr_element: soup.Element) -> Result(List(soup.Element), Nil) {
   case tr_element {
@@ -142,6 +150,7 @@ fn get_td_elements(tr_element: soup.Element) -> Result(List(soup.Element), Nil) 
   }
 }
 
+// TODO: Write 4 tests: happy, sad (too many entries), sad (too few entries), sad (no tds)
 pub fn parse_table_entry(tr_element: soup.Element) -> Result(Entry, Nil) {
   case get_td_elements(tr_element) {
     Ok(tds) -> {
