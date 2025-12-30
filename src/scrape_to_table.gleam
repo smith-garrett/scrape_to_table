@@ -12,22 +12,28 @@ import presentable_soup as soup
 pub fn main() -> Nil {
   // Note! The BVDG just generates a page for any queried season, so we have to
   // manually constrain ourselves to the valid years for now
-  let start_year = 2018
-  let end_year = 2025 + 1
-  let urls = generate_urls(start_year, end_year + 1)
+  let urls = generate_urls(2018, 2026)
   let getter = new_response_getter()
 
-  let html_bodies =
+  // Pair each URL with its year
+  let url_year_pairs =
     urls
-    |> list.map(get_html_body(_, getter))
-    |> result.values
-    |> list.strict_zip(list.range(start_year, end_year))
+    |> list.map(fn(url) {
+      let year = extract_year_from_url(url)
+      #(url, year)
+    })
 
   let entries =
-    html_bodies
-    |> list.flat_map(fn(body) {
-      case get_all_table_entries(body) {
-        Ok(trs) -> trs |> list.filter_map(parse_table_entry)
+    url_year_pairs
+    |> list.flat_map(fn(pair) {
+      let #(url, year) = pair
+      case get_html_body(url, getter) {
+        Ok(body) -> {
+          case get_all_table_entries(body) {
+            Ok(trs) -> trs |> list.filter_map(parse_table_entry(_, year))
+            Error(_) -> []
+          }
+        }
         Error(_) -> []
       }
     })
@@ -36,7 +42,9 @@ pub fn main() -> Nil {
   entries
   |> list.each(fn(entry) {
     io.println(
-      "Rank: "
+      "Year: "
+      <> int.to_string(entry.year)
+      <> ", Rank: "
       <> int.to_string(entry.rank)
       <> ", Name: "
       <> entry.name
@@ -102,8 +110,19 @@ pub type Entry {
   Entry(year: Int, rank: Int, name: String, club: String, maximum_points: Float)
 }
 
+// TODO: Write 3 tests: happy, sad (nothing after the /), sad (non-integers after /)
+fn extract_year_from_url(url: String) -> Int {
+  url
+  |> string.split("/")
+  |> list.last
+  |> result.unwrap("")
+  |> string.split("-")
+  |> list.first
+  |> result.try(int.parse)
+  |> result.unwrap(0)
+}
+
 // TODO: Write 2 tests: one with an embedded child, one without
-// Extract text content from an element and its children
 fn get_text_content(element: soup.Element) -> String {
   case element {
     soup.Element(_tag, _attrs, children) -> {
@@ -151,7 +170,10 @@ fn get_td_elements(tr_element: soup.Element) -> Result(List(soup.Element), Nil) 
 }
 
 // TODO: Write 4 tests: happy, sad (too many entries), sad (too few entries), sad (no tds)
-pub fn parse_table_entry(tr_element: soup.Element) -> Result(Entry, Nil) {
+pub fn parse_table_entry(
+  tr_element: soup.Element,
+  year: Int,
+) -> Result(Entry, Nil) {
   case get_td_elements(tr_element) {
     Ok(tds) -> {
       // The table has columns: Rank, Name, Club, Maximum Points
@@ -170,6 +192,7 @@ pub fn parse_table_entry(tr_element: soup.Element) -> Result(Entry, Nil) {
           let points = float.parse(points_normalized) |> result.unwrap(0.0)
 
           Ok(Entry(
+            year: year,
             rank: rank,
             name: name_text,
             club: club_text,
