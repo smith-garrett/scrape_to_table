@@ -215,7 +215,7 @@ pub fn text_from_lifter_entry(lifter_entry: LifterEntry) -> String {
 
 pub fn generate_sql(entries: List(String)) -> String {
   let all_entries = entries |> string.join(",\n") |> fn(x) { x <> ";" }
-  "create table lifters (year int, rank int, name string, club string, maximum_points real);
+  "create table if not exists lifters (year int, rank int, name string, club string, maximum_points real);
 insert into lifters (year, rank, name, club, maximum_points) values"
   <> "\n"
   <> all_entries
