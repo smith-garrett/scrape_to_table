@@ -18,7 +18,7 @@ pub fn insert_lifters(
 pub fn generate_sql(entries: List(String)) -> String {
   let all_entries = entries |> string.join(",\n") |> fn(x) { x <> ";" }
   "begin transaction;\n"
-  <> "create table if not exists lifters (year int, rank int, name string, club string, maximum_points real);
+  <> "create table if not exists lifters (year integer, rank integer, name text, club text, maximum_points real);
 insert into lifters (year, rank, name, club, maximum_points) values"
   <> "\n"
   <> all_entries
