@@ -176,12 +176,9 @@ pub fn parse_table_entry(
           let club_text = get_text_content(club_cell)
           let points_text = get_text_content(points_cell)
 
-          // Parse rank as int
           let rank = int.parse(rank_text) |> result.unwrap(0)
 
-          // Parse points as float (might have comma as decimal separator)
-          let points_normalized = string.replace(points_text, ",", ".")
-          let points = float.parse(points_normalized) |> result.unwrap(0.0)
+          let points = float.parse(points_text) |> result.unwrap(0.0)
 
           Ok(Entry(
             year: year,
