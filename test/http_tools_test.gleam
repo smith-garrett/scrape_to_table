@@ -1,12 +1,7 @@
 import gleam/http/response
 import gleam/httpc
-import gleeunit
 import gleeunit/should
 import scrape_to_table/http_tools
-
-pub fn main() -> Nil {
-  gleeunit.main()
-}
 
 pub fn generate_urls_test() {
   let urls_one_season = http_tools.generate_urls(1, 2)
