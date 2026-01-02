@@ -37,20 +37,5 @@ pub fn main() -> Nil {
     })
 
   use sql_connection <- sqlight.with_connection("lifters.sqlite3")
-  let sql_command =
-    lifter_entries
-    |> list.map(html_parsing.text_from_lifter_entry)
-    |> generate_sql
-  let assert Ok(Nil) = sqlight.exec(sql_command, sql_connection)
-  Nil
-}
-
-pub fn generate_sql(entries: List(String)) -> String {
-  let all_entries = entries |> string.join(",\n") |> fn(x) { x <> ";" }
-  "begin transaction;\n"
-  <> "create table if not exists lifters (year int, rank int, name string, club string, maximum_points real);
-insert into lifters (year, rank, name, club, maximum_points) values"
-  <> "\n"
-  <> all_entries
-  <> "\ncommit;"
+  db.insert_lifters(lifter_entries, sql_connection)
 }
