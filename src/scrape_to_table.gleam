@@ -1,5 +1,8 @@
+import gleam/io
 import gleam/list
+import gleam/result
 import gleam/string
+import presentable_soup as soup
 import scrape_to_table/db
 import scrape_to_table/html_parsing
 import scrape_to_table/http_tools
@@ -8,7 +11,7 @@ import sqlight
 pub fn main() -> Nil {
   // Note! The BVDG just generates a page for any queried season, so we have to
   // manually constrain ourselves to the valid years for now
-  let urls = http_tools.generate_urls(2018, 2026)
+  let urls = http_tools.generate_urls(2018, 2025)
   let getter = http_tools.new_response_getter()
 
   // Pair each URL with its year
@@ -25,12 +28,10 @@ pub fn main() -> Nil {
       let #(url, year) = pair
       case http_tools.get_html_body(url, getter) {
         Ok(body) -> {
-          case html_parsing.get_all_table_rows(body) {
-            Ok(table_rows) ->
-              table_rows
-              |> list.filter_map(html_parsing.parse_table_entry(_, year))
-            Error(_) -> []
-          }
+          body
+          |> html_parsing.get_table_text_from_html_body()
+          |> list.filter_map(fn(x) { html_parsing.parse_table_entry(x, year) })
+          |> echo
         }
         Error(_) -> []
       }
