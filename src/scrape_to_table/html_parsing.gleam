@@ -44,25 +44,30 @@ pub fn get_table_text_from_html_body(body: String) -> List(List(String)) {
 pub fn parse_table_entry(
   table_row: List(String),
   year: Int,
-) -> Result(LifterEntry, String) {
+) -> Result(LifterEntry, Nil) {
   case table_row {
     [rank_cell, name_cell, club_cell, points_cell, ..] -> {
-      Ok(LifterEntry(
-        year: year,
-        rank: int.parse(rank_cell)
-          |> result.lazy_unwrap(fn() {
-            log.warning("Invalid rank found", [])
-            0
-          }),
-        name: name_cell,
-        club: club_cell,
-        maximum_points: float.parse(points_cell)
-          |> result.lazy_unwrap(fn() {
-            log.warning("Invalid points found", [])
-            0.0
-          }),
-      ))
+      case int.parse(rank_cell), float.parse(points_cell) {
+        Ok(r), Ok(pts) ->
+          Ok(LifterEntry(
+            year: year,
+            rank: r,
+            name: name_cell,
+            club: club_cell,
+            maximum_points: pts,
+          ))
+        _, _ -> {
+          log.warning("Could not parse rank or points", [
+            #("rank", rank_cell),
+            #("points", points_cell),
+          ])
+          Error(Nil)
+        }
+      }
     }
-    _ -> Error("Could not parse table entry to LifterEntry type")
+    _ -> {
+      log.warning("Table row in unexpected format", [])
+      Error(Nil)
+    }
   }
 }
