@@ -28,7 +28,9 @@ pub type HttpResponseGetter {
 pub fn new_response_getter() -> HttpResponseGetter {
   let get_fn = fn(url: String) {
     let assert Ok(req) = request.to(url)
-    httpc.send(req)
+    req
+    |> request.set_header("User-Agent", "scrape_to_table/1.0 (Educational)")
+    |> httpc.send()
   }
   HtmlGetter(get_fn)
 }
