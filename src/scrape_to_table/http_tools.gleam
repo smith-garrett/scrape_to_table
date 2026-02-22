@@ -1,3 +1,4 @@
+import gleam/erlang/process
 import gleam/http/request
 import gleam/http/response
 import gleam/httpc
@@ -44,4 +45,14 @@ pub fn get_html_body(
     Ok(r) -> Ok(r.body)
     _ -> Error(Nil)
   }
+}
+
+pub fn get_html_body_with_delay(
+  url: String,
+  response_getter: HttpResponseGetter,
+  delay_ms: Int,
+) {
+  let result = get_html_body(url, response_getter)
+  process.sleep(delay_ms)
+  result
 }

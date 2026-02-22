@@ -24,7 +24,7 @@ pub fn main() -> Nil {
     url_year_pairs
     |> list.flat_map(fn(pair) {
       let #(url, year) = pair
-      case http_tools.get_html_body(url, getter) {
+      case http_tools.get_html_body_with_delay(url, getter, 1000) {
         Ok(body) -> {
           body
           |> html_parsing.get_table_text_from_html_body()
