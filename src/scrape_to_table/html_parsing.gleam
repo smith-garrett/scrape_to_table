@@ -66,18 +66,3 @@ pub fn parse_table_entry(
     _ -> Error("Could not parse table entry to LifterEntry type")
   }
 }
-
-pub fn text_from_lifter_entry(lifter_entry: LifterEntry) -> String {
-  "("
-  <> string.join(
-    [
-      int.to_string(lifter_entry.year),
-      int.to_string(lifter_entry.rank),
-      "'" <> lifter_entry.name <> "'",
-      "'" <> lifter_entry.club <> "'",
-      float.to_string(lifter_entry.maximum_points),
-    ],
-    ", ",
-  )
-  <> ")"
-}
