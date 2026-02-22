@@ -17,7 +17,7 @@ pub type LifterEntry {
 }
 
 // TODO: Write 3 tests: happy, sad (nothing after the /), sad (non-integers after /)
-pub fn extract_year_from_url(url: String) -> Int {
+pub fn extract_year_from_url(url: String) -> Result(Int, Nil) {
   url
   |> string.split("/")
   |> list.last
@@ -25,10 +25,10 @@ pub fn extract_year_from_url(url: String) -> Int {
   |> string.split("-")
   |> list.first
   |> result.try(int.parse)
-  |> result.lazy_unwrap(fn() {
-    log.warning("Year not found. Replacing with 0.", [])
-    0
-  })
+  // |> result.lazy_unwrap(fn() {
+  //   log.warning("Year not found. Replacing with 0.", [])
+  //   0
+  // })
 }
 
 pub fn get_table_text_from_html_body(body: String) -> List(List(String)) {
@@ -40,7 +40,6 @@ pub fn get_table_text_from_html_body(body: String) -> List(List(String)) {
   |> list.map(fn(x) { list.filter(x, fn(y) { string.trim(y) != "" }) })
 }
 
-// TODO: Write 4 tests: happy, sad (too many entries), sad (too few entries), sad (no tds)
 pub fn parse_table_entry(
   table_row: List(String),
   year: Int,

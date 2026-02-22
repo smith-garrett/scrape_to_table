@@ -1,4 +1,5 @@
 import gleam/list
+import gleam/result
 import scrape_to_table/db
 import scrape_to_table/html_parsing
 import scrape_to_table/http_tools
@@ -16,8 +17,12 @@ pub fn main() -> Nil {
     urls
     |> list.map(fn(url) {
       let year = html_parsing.extract_year_from_url(url)
-      #(url, year)
+      case year {
+        Ok(y) -> Ok(#(url, y))
+        _ -> Error(Nil)
+      }
     })
+    |> result.values
 
   log.info("Loading entries...", [])
   let lifter_entries =
