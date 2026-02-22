@@ -4,6 +4,7 @@ import gleam/http/response
 import gleam/httpc
 import gleam/int
 import gleam/list
+import woof as log
 
 pub fn generate_urls(start: Int, end: Int) -> List(String) {
   let seasons =
@@ -43,7 +44,10 @@ pub fn get_html_body(
   let resp = response_getter.get(url)
   case resp {
     Ok(r) -> Ok(r.body)
-    _ -> Error(Nil)
+    _ -> {
+      log.error("URL not found", [#("url", url)])
+      Error(Nil)
+    }
   }
 }
 

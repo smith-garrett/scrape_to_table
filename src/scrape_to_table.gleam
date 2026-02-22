@@ -1,9 +1,9 @@
-import gleam/io
 import gleam/list
 import scrape_to_table/db
 import scrape_to_table/html_parsing
 import scrape_to_table/http_tools
 import sqlight
+import woof as log
 
 pub fn main() -> Nil {
   // Note! The BVDG just generates a page for any queried season, so we have to
@@ -19,7 +19,7 @@ pub fn main() -> Nil {
       #(url, year)
     })
 
-  io.println("Loading entries...")
+  log.info("Loading entries...", [])
   let lifter_entries =
     url_year_pairs
     |> list.flat_map(fn(pair) {
@@ -34,8 +34,8 @@ pub fn main() -> Nil {
       }
     })
 
-  io.println("Writing to database...")
+  log.info("Writing to database...", [])
   use sql_connection <- sqlight.with_connection("lifters.sqlite3")
   db.insert_lifters(lifter_entries, sql_connection)
-  io.println("Done!")
+  log.info("Done!", [])
 }

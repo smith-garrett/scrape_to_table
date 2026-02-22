@@ -4,6 +4,7 @@ import gleam/list
 import gleam/result
 import gleam/string
 import presentable_soup as soup
+import woof as log
 
 pub type LifterEntry {
   LifterEntry(
@@ -24,7 +25,10 @@ pub fn extract_year_from_url(url: String) -> Int {
   |> string.split("-")
   |> list.first
   |> result.try(int.parse)
-  |> result.unwrap(0)
+  |> result.lazy_unwrap(fn() {
+    log.warning("Year not found. Replacing with 0.", [])
+    0
+  })
 }
 
 pub fn get_table_text_from_html_body(body: String) -> List(List(String)) {
@@ -40,18 +44,26 @@ pub fn get_table_text_from_html_body(body: String) -> List(List(String)) {
 pub fn parse_table_entry(
   table_row: List(String),
   year: Int,
-) -> Result(LifterEntry, Nil) {
+) -> Result(LifterEntry, String) {
   case table_row {
     [rank_cell, name_cell, club_cell, points_cell, ..] -> {
       Ok(LifterEntry(
         year: year,
-        rank: int.parse(rank_cell) |> result.unwrap(0),
+        rank: int.parse(rank_cell)
+          |> result.lazy_unwrap(fn() {
+            log.warning("Invalid rank found", [])
+            0
+          }),
         name: name_cell,
         club: club_cell,
-        maximum_points: float.parse(points_cell) |> result.unwrap(0.0),
+        maximum_points: float.parse(points_cell)
+          |> result.lazy_unwrap(fn() {
+            log.warning("Invalid points found", [])
+            0.0
+          }),
       ))
     }
-    _ -> Error(Nil)
+    _ -> Error("Could not parse table entry to LifterEntry type")
   }
 }
 

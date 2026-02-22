@@ -12,6 +12,7 @@ packages = [
   { name = "htmerl", version = "0.2.1", build_tools = ["rebar3"], requirements = [], otp_app = "htmerl", source = "hex", outer_checksum = "EBD3F54E6DC98594F54BB3C214F5B96CAE90D1AE2A4B7E487FBE94A929110015" },
   { name = "presentable_soup", version = "2.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib", "houdini", "htmerl"], otp_app = "presentable_soup", source = "hex", outer_checksum = "56FED72B18B55DDC31B672667AD8C6B440C906FFA832435653E927818752F6AB" },
   { name = "sqlight", version = "1.0.3", build_tools = ["gleam"], requirements = ["esqlite", "gleam_stdlib"], otp_app = "sqlight", source = "hex", outer_checksum = "CADD79663C9B61D4BAC960A47CC2D42CA8F48EAF5804DBEB79977287750F4B16" },
+  { name = "woof", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "woof", source = "hex", outer_checksum = "DFD5CD03C24F382DAFD1EF9E93D5156B446C18A0D01EB7C8E27ACC230A036566" },
 ]
 
 [requirements]
@@ -22,3 +23,4 @@ gleam_stdlib = { version = ">= 0.44.0 and < 2.0.0" }
 gleeunit = { version = ">= 1.0.0 and < 2.0.0" }
 presentable_soup = { version = ">= 2.0.0 and < 3.0.0" }
 sqlight = { version = ">= 1.0.3 and < 2.0.0" }
+woof = { version = ">= 1.0.0 and < 2.0.0" }
